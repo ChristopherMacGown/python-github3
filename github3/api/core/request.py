@@ -30,7 +30,9 @@ class Request(object):
 
     def list(self, project, **kwargs):
         res = self.request.get(self._build_url(project), params=kwargs)
-        return [self.datatype(r) for r in res]
+        print res[0]
+        print type(res[0])
+        return [self.datatype(**r) for r in res]
 
     def new(self, *args, **kwargs):
         post_data = kwargs
