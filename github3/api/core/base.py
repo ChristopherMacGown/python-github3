@@ -12,6 +12,7 @@ def doc_generator(docstring, attributes):
                     for attr_name, attr in attributes.items()])
     return "\n".join([docstring, a, b])
 
+
 class APIBaseType(type):
     """Type for APIBase class.
 
@@ -51,7 +52,7 @@ class APIBaseType(type):
 
         attrs["_meta"] = dict([(k, v) for k, v
                                       in attrs.items()
-                                      if type(v).__name__ == 'Attribute'])
+                                      if "Attribute" in type(v).__name__])
         attributes = attrs["_meta"].keys()
         attrs.update(dict([(k, None) for k in attrs["_meta"].keys()]))
 

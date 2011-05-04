@@ -1,22 +1,37 @@
 BASE_API_URL = "https://api.github.com/repos"
 
+
 class Request(object):
     def __init__(self, request):
+        self.command = None
         self.datatype = self.__datatype__
         self.request = request
-        self.resource_name = self.__class__.__name__.lower()
+        self.resource = self.__class__.__name__.lower()
 
-    def _build_url(self, project, *args):
-        return str.join("/", (BASE_API_URL, project, self.resource_name) + args)
+    def __call__(self, *args):
+        self.command = (BASE_API_URL,) + args + (self.resource,)
+        return self
 
-    def create(self, project, **kwargs):
+    def _build_url(self, *args):
+        return str.join("/", self.command + args)
+
+    def _build_single(self, resource):
+        try:
+            return self.datatype(**resource)
+        except TypeError, e:
+            # stringify keys because Python 2.6.1 doesn't like unicode keys.
+            resource = dict([(str(k),v) for k,v in resource.items()])
+            return self.datatype(**resource)
+
+    def create(self, **kwargs):
         # todo(chris): Fix this shit.
         post_data = kwargs
-        res = self.request.post(self._build_url(project), post_data)
-        return self.datatype(res)
+        res = self.request.post(self._build_url(), post_data)
+        return self._build_single(res)
 
-    def show(self):
-        pass
+    def show(self, number):
+        res = self.request.get(self._build_url(str(number)))
+        return self._build_single(res)
 
     def update(self):
         pass
@@ -24,20 +39,14 @@ class Request(object):
     def put(self):
         pass
 
-    def delete(self, project, object_id):
-        res = self.request.delete(self._build_url(project, object_id))
-        return res
+    def delete(self, number):
+        return self.request.delete(self._build_url(str(number)))
 
-    def list(self, project, **kwargs):
-        res = self.request.get(self._build_url(project), params=kwargs)
-        print res[0]
-        print type(res[0])
-        return [self.datatype(**r) for r in res]
+    def list(self, **kwargs):
+        res = self.request.get(self._build_url(), params=kwargs)
+        return [self._build_single(r) for r in res]
 
-    def new(self, *args, **kwargs):
-        post_data = kwargs
-        repo = kwargs["repo"]
-        command = (repo, self.__class__.__name__.lower())
-        res = self.request.post(command, post_data)
 
-        return self.datatype(res[self.datatype_name])
+class NullOpRequest(Request):
+    def __init__(self, request):
+        pass
