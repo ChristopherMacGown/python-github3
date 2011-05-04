@@ -2,3 +2,17 @@ THIS IS NOT YET FINISHED, DO NOT USE THIS IN PRODUCTION, THIS IS NOT A BANANA.
 I WILL BE CHANGING HOW YOU INTERACT WITH THE CLIENT. THERE WILL BE SEARCH STUFF
 ADDED TO THE HANDLERS. PYLINT CLEANUPS ARE FORTHCOMING, AUTHENTICATION IS
 FORTHCOMING, MORE TESTS ARE FORTHCOMING.
+
+
+To use:
+
+
+from github3 import client
+
+
+c = client.Client(username="blah", auth_token="BLAH")
+issues = c.issues("github_username_of_repo", "repo").list()
+issue = c.issues("github_username_of_repo", "repo").show(12345)
+
+
+Deletes don't work, creates don't work, updates don't work.
