@@ -15,4 +15,4 @@ issues = c.issues("github_username_of_repo", "repo").list()
 issue = c.issues("github_username_of_repo", "repo").show(12345)
 
 
-Deletes don't work, creates don't work, updates don't work.
+Deletes don't work, creates don't work, updates don't work, auth doesn't work.
