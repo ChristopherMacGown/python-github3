@@ -1,18 +1,45 @@
-THIS IS NOT YET FINISHED, DO NOT USE THIS IN PRODUCTION, THIS IS NOT A BANANA.
-I WILL BE CHANGING HOW YOU INTERACT WITH THE CLIENT. THERE WILL BE SEARCH STUFF
-ADDED TO THE HANDLERS. PYLINT CLEANUPS ARE FORTHCOMING, AUTHENTICATION IS
-FORTHCOMING, MORE TESTS ARE FORTHCOMING.
+python-github3
+==============
+
+Here are the beginning of a python library to take advantage of the new API. It
+is still in development and the interfaces may (read: will) change but is full
+featured enough now to be used for most tasks of the new API.
+
+Caveats
+-------
+
+This is for the APIv3 featureset. If the stuff in APIv2 is a long time coming
+then there is some vague chance of adding support for those features here, but
+in general the style of the two versions are rather different so it is somewhat
+preferable to limit this to the v3 style.
 
 
-To use:
+Examples
+--------
 
+  from github3 import client
 
-from github3 import client
+  # Build a client with our auth credentials, should work with oauth_token
+  # instead of password, but that is not tested yet
+  c = client.Client(username='some_user', password='some_password')
 
+  # Most actions (issues and the like) are actions on a repo
+  repo = client.repo('repo_user', 'repo_name')
 
-c = client.Client(username="blah", auth_token="BLAH")
-issues = c.issues("github_username_of_repo", "repo").list()
-issue = c.issues("github_username_of_repo", "repo").show(12345)
+  # We use a very pythonic interface to the data, most things act like dicts or
+  # lists, though the interfaces still need a little massaging
+  issues = repo.issues()
 
+  # Iterate through all the issues, handle pagination for you so may make
+  # multiple requests.
+  for x in issues:
+    print x['title']
 
-Deletes don't work, creates don't work, updates don't work, auth doesn't work.
+  # Create a new issue
+  new_issue = issues.append(title='foo')
+
+  # Update that issue
+  new_issue.update(milestone=1)
+
+  # Delete that issue
+  new_issue.delete()

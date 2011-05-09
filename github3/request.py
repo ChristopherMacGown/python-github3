@@ -36,26 +36,23 @@ class Request(object):
     return self._opener.open(req)
 
   def post(self, url, **kw):
-    url = '%s?%s' % (url, urllib.urlencode(kw))
     req = HTTPMethodRequest('POST', url, json.dumps(kw))
     req = self._authenticate(req)
     return self._opener.open(req)
 
   def patch(self, url, **kw):
-    url = '%s?%s' % (url, urllib.urlencode(kw))
     req = HTTPMethodRequest('PATCH', url, json.dumps(kw))
     req = self._authenticate(req)
     return self._opener.open(req)
 
   def put(self, url, **kw):
-    url = '%s?%s' % (url, urllib.urlencode(kw))
     req = HTTPMethodRequest('PATCH', url, json.dumps(kw))
     req = self._authenticate(req)
     return self._opener.open(req)
 
   def delete(self, url, **kw):
     url = '%s?%s' % (url, urllib.urlencode(kw))
-    req = HTTPMethodRequest('HEAD', url)
+    req = HTTPMethodRequest('DELETE', url)
     req = self._authenticate(req)
     return self._opener.open(req)
 
