@@ -30,7 +30,28 @@ class Repo(object):
 
   def issue(self, id_):
     """Return a Resource of an issue."""
-    pass
+    url = '%s/%s/%s/issues/%s' % (self.BASE_URL, self.user, self.repo, id_)
+    resp = self.client.get(url)
+    return Resource(self.client, url, json.loads(resp.read()))
+
+  def milestones(self, **kw):
+    """Return a PaginatedResourceList of milestones."""
+    url = '%s/%s/%s/milestones' % (self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
+
+  def labels(self, **kw):
+    """Return a PaginatedResourceList of labels."""
+    url = '%s/%s/%s/labels' % (self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
+
+  def comments(self, issue, **kw):
+    """Return a PaginatedResourceList of comments for an issue."""
+    url = '%s/%s/%s/issues/%s/comments' % (
+        self.BASE_URL, self.user, self.repo, issue)
+    resp = self.client.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
 
 
 class ResourceList(object):
@@ -46,7 +67,8 @@ class ResourceList(object):
                [self._resource_factory(x) for x in json.load(response)])
 
   def append(self, **kw):
-    self.client.post(self.url, **kw)
+    rv = self.client.post(self.url, **kw)
+    return json.loads(rv.read())
 
   def __iter__(self):
     return iter(self.datalist)
@@ -97,8 +119,9 @@ class Resource(dict):
     raise Exception('cannot modify dict')
 
   def update(self, kw):
-    self.client.patch(self.url, **kw)
+    rv = self.client.patch(self.url, **kw)
     dict.update(self, kw)
+    return json.loads(rv.read())
 
   def delete(self):
     self.client.delete(self.url)
