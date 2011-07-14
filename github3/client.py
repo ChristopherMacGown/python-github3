@@ -77,7 +77,7 @@ class Repo(object):
 
   def forks(self, **kw):
     """Return a Paginated ResourceList of forks for a repo"""
-     url = '%s/%s/%s/forks' % (
+    url = '%s/%s/%s/forks' % (
             self.BASE_URL, self.user, self.repo)
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
