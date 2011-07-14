@@ -24,7 +24,7 @@ Examples
   c = client.Client(username='some_user', password='some_password')
 
   # Most actions (issues and the like) are actions on a repo
-  repo = client.repo('repo_user', 'repo_name')
+  repo = client.Repo(c,'repo_user', 'repo_name')
 
   # We use a very pythonic interface to the data, most things act like dicts or
   # lists, though the interfaces still need a little massaging
