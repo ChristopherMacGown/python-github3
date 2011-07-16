@@ -53,6 +53,35 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
 
+  def commits(self, sha = None, **kw):
+    """Return a PaginatedResourceList of commits for a repo"""
+    if sha:
+        url = '%s/%s/%s/commits/%s' % (
+            self.BASE_URL, self.user, self.repo, sha)
+    else:
+         url = '%s/%s/%s/commits' % (
+            self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
+
+  def pullrequests(self, id = None, **kw):
+    """Return a PaginatedResourceList of pull requests for a repo"""
+    if id:
+        url = '%s/%s/%s/pulls/%s' % (
+            self.BASE_URL, self.user, self.repo, id)
+    else:
+         url = '%s/%s/%s/pulls' % (
+            self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
+
+  def forks(self, **kw):
+    """Return a Paginated ResourceList of forks for a repo"""
+    url = '%s/%s/%s/forks' % (
+            self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
+
 
 class ResourceList(object):
   def __init__(self, client, url, datalist=None):
