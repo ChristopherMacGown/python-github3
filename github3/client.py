@@ -64,7 +64,7 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
 
-  def pullrequests(self, id = None, **kw):
+  def pull_requests(self, id = None, **kw):
     """Return a PaginatedResourceList of pull requests for a repo"""
     if id:
         url = '%s/%s/%s/pulls/%s' % (
