@@ -10,6 +10,13 @@ def _resource_factory(client, data):
 
 
 class Client(request.Request):
+
+  def list_repo(self, user, **kw):
+    """Return a PaginatedResourceList of all of the authenticated user's repos"""
+    url = "https://api.github.com/user/repos"
+    resp = self.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self, resp)
+
   def repo(self, user, repo_):
     return Repo(client=self, user=user, repo=repo_)
 
