@@ -20,7 +20,6 @@ class Client(request.Request):
   def repo(self, user, repo_):
     return Repo(client=self, user=user, repo=repo_)
 
-
 class Repo(object):
   BASE_URL = "https://api.github.com/repos"
 
@@ -140,7 +139,6 @@ class PaginatedResourceList(ResourceList):
       except IndexError:
         if json.load(self.client.get(self.url.split("?")[0], page=page)):
           response = self.client.get(self.url.split("?")[0], page=page)
-          import pdb; pdb.set_trace()
           self.datalist.extend(
               [_resource_factory(self.client, x) for x in json.load(response)])
           page += 1
