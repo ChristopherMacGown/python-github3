@@ -89,6 +89,13 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
 
+  def branches(self, **kw):
+    """Return a Paginated ResourceList of Branches for a repo"""
+    url = '%s/%s/%s/branches' % (
+            self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
+
 
 class ResourceList(object):
   def __init__(self, client, url, datalist=None):
@@ -126,15 +133,17 @@ class PaginatedResourceList(ResourceList):
 
   def __iter__(self):
     i = 0
+    page = 1
     while True:
       try:
         yield self.datalist[i]
       except IndexError:
-        if self.next_page:
-          response = self.client.get(self.next_page)
-          self.next_page = response.info().get('X-Next')
+        if json.load(self.client.get(self.url.split("?")[0], page=page)):
+          response = self.client.get(self.url.split("?")[0], page=page)
+#          import pdb; pdb.set_trace()
           self.datalist.extend(
               [_resource_factory(self.client, x) for x in json.load(response)])
+          page += 1
           yield self.datalist[i]
         else:
           raise StopIteration
