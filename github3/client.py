@@ -94,7 +94,7 @@ class Repo(object):
     url = '%s/%s/%s/branches' % (
             self.BASE_URL, self.user, self.repo)
     resp = self.client.get(url, **kw)
-    return PaginatedResourceList.FromResponse(self.client, resp)
+    return ResourceList.FromResponse(self.client, resp)
 
 
 class ResourceList(object):
@@ -107,7 +107,7 @@ class ResourceList(object):
   def FromResponse(cls, client, response):
     return cls(client,
                response.geturl(),
-               [self._resource_factory(x) for x in json.load(response)])
+               [_resource_factory(client, x) for x in json.load(response)])
 
   def append(self, **kw):
     rv = self.client.post(self.url, **kw)
@@ -133,14 +133,14 @@ class PaginatedResourceList(ResourceList):
 
   def __iter__(self):
     i = 0
-    page = 1
+    page = 2
     while True:
       try:
         yield self.datalist[i]
       except IndexError:
         if json.load(self.client.get(self.url.split("?")[0], page=page)):
           response = self.client.get(self.url.split("?")[0], page=page)
-#          import pdb; pdb.set_trace()
+          import pdb; pdb.set_trace()
           self.datalist.extend(
               [_resource_factory(self.client, x) for x in json.load(response)])
           page += 1
