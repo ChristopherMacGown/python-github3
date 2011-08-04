@@ -10,10 +10,11 @@ def _resource_factory(client, data):
 
 
 class Client(request.Request):
+  BASE_URL = "https://api.github.com/user"
 
-  def list_repo(self, user, **kw):
+  def list_repo(self, **kw):
     """Return a PaginatedResourceList of all of the authenticated user's repos"""
-    url = "https://api.github.com/user/repos"
+    url = "%s/repos" % (self.BASE_URL)
     resp = self.get(url, **kw)
     return PaginatedResourceList.FromResponse(self, resp)
 
@@ -89,7 +90,7 @@ class Repo(object):
     return PaginatedResourceList.FromResponse(self.client, resp)
 
   def branches(self, **kw):
-    """Return a Paginated ResourceList of Branches for a repo"""
+    """Return a ResourceList of Branches for a repo"""
     url = '%s/%s/%s/branches' % (
             self.BASE_URL, self.user, self.repo)
     resp = self.client.get(url, **kw)
