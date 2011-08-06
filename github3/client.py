@@ -10,16 +10,16 @@ def _resource_factory(client, data):
 
 
 class Client(request.Request):
+  BASE_URL = "https://api.github.com/user"
 
-  def list_repo(self, user, **kw):
+  def list_repo(self, **kw):
     """Return a PaginatedResourceList of all of the authenticated user's repos"""
-    url = "https://api.github.com/user/repos"
+    url = "%s/repos" % (self.BASE_URL)
     resp = self.get(url, **kw)
     return PaginatedResourceList.FromResponse(self, resp)
 
   def repo(self, user, repo_):
     return Repo(client=self, user=user, repo=repo_)
-
 
 class Repo(object):
   BASE_URL = "https://api.github.com/repos"
@@ -60,13 +60,9 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
 
-  def commits(self, sha = None, **kw):
+  def commits(self, **kw):
     """Return a PaginatedResourceList of commits for a repo"""
-    if sha:
-        url = '%s/%s/%s/commits/%s' % (
-            self.BASE_URL, self.user, self.repo, sha)
-    else:
-         url = '%s/%s/%s/commits' % (
+    url = '%s/%s/%s/commits' % (
             self.BASE_URL, self.user, self.repo)
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
@@ -89,6 +85,13 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
 
+  def branches(self, **kw):
+    """Return a ResourceList of Branches for a repo"""
+    url = '%s/%s/%s/branches' % (
+            self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **kw)
+    return ResourceList.FromResponse(self.client, resp)
+
 
 class ResourceList(object):
   def __init__(self, client, url, datalist=None):
@@ -100,7 +103,7 @@ class ResourceList(object):
   def FromResponse(cls, client, response):
     return cls(client,
                response.geturl(),
-               [self._resource_factory(x) for x in json.load(response)])
+               [_resource_factory(client, x) for x in json.load(response)])
 
   def append(self, **kw):
     rv = self.client.post(self.url, **kw)
@@ -126,15 +129,16 @@ class PaginatedResourceList(ResourceList):
 
   def __iter__(self):
     i = 0
+    page = 2
     while True:
       try:
         yield self.datalist[i]
       except IndexError:
-        if self.next_page:
-          response = self.client.get(self.next_page)
-          self.next_page = response.info().get('X-Next')
+        if json.load(self.client.get(self.url.split("?")[0], page=page)):
+          response = self.client.get(self.url.split("?")[0], page=page)
           self.datalist.extend(
               [_resource_factory(self.client, x) for x in json.load(response)])
+          page += 1
           yield self.datalist[i]
         else:
           raise StopIteration

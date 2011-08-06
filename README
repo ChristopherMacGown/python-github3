@@ -19,8 +19,8 @@ Examples
 
   from github3 import client
 
-  # Build a client with our auth credentials, should work with oauth_token
-  # instead of password, but that is not tested yet
+  # Build a client with our auth credentials, works with oauth_token
+  # instead of password.
   c = client.Client(username='some_user', password='some_password')
 
   # Most actions (issues and the like) are actions on a repo
