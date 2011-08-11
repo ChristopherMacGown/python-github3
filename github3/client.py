@@ -96,9 +96,8 @@ class Repo(object):
 class User(object):
   BASE_URL = "https://api.github.com/user"
 
-  def __init__(self, client, user):
+  def __init__(self, client):
     self.client = client
-    self.user = user
 
   def user_info(self, **kw):
     """Returns a ResourceList of a user's information"""
