@@ -109,8 +109,6 @@ class User(object):
     """Returns a SimpleList of a user's email addresses. Email addresses don't
     return in a usual format, thus the need for a simple list."""
     url = "%s/emails" %self.BASE_URL
-    print url
-    print **kw
     resp = self.client.get(url, **kw)
     return SimpleList.FromResponse(self.client, resp)
 
