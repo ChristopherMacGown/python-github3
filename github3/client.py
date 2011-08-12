@@ -179,6 +179,8 @@ class PaginatedResourceList(ResourceList):
           yield self.datalist[i]
         else:
           raise StopIteration
+      except HTTPError:
+        raise StopIteration
 
       i += 1
 
