@@ -93,6 +93,27 @@ class Repo(object):
     return ResourceList.FromResponse(self.client, resp)
 
 
+class User(object):
+  BASE_URL = "https://api.github.com/user"
+
+  def __init__(self, client):
+    self.client = client
+
+  def user_info(self, **kw):
+    """Returns a ResourceList of a user's information"""
+    url = self.BASE_URL
+    resp = self.client.get(url, **kw)
+    return ResourceList.FromResponse(self.client, resp)
+
+  def user_emails(self, **kw):
+    """Returns a SimpleList of a user's email addresses. Email addresses don't
+    return in a usual format, thus the need for a simple list."""
+    url = "%s/emails" %self.BASE_URL
+    resp = self.client.get(url, **kw)
+    return SimpleList.FromResponse(self.client, resp)
+
+
+
 class ResourceList(object):
   def __init__(self, client, url, datalist=None):
     self.client = client
@@ -101,9 +122,16 @@ class ResourceList(object):
 
   @classmethod
   def FromResponse(cls, client, response):
-    return cls(client,
+      j = json.load(response)
+      if type(j) is list:
+        return cls(client,
                response.geturl(),
-               [_resource_factory(client, x) for x in json.load(response)])
+               [_resource_factory(client, x) for x in j])
+      else:
+        return cls(client,
+               response.geturl(),
+               _resource_factory(client, j))
+
 
   def append(self, **kw):
     rv = self.client.post(self.url, **kw)
@@ -111,6 +139,15 @@ class ResourceList(object):
 
   def __iter__(self):
     return iter(self.datalist)
+
+
+class SimpleList(ResourceList):
+
+    @classmethod
+    def FromResponse(cls, client, response):
+      j = json.load(response)
+      return cls(client, response.geturl(), j)
+
 
 
 class PaginatedResourceList(ResourceList):
@@ -142,6 +179,8 @@ class PaginatedResourceList(ResourceList):
           yield self.datalist[i]
         else:
           raise StopIteration
+      except HTTPError:
+        raise StopIteration
 
       i += 1
 
