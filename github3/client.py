@@ -114,7 +114,7 @@ class User(object):
 
   def user_issues(self, **kw):
     """Returns a PaginatedResourceList of the authenticated user's issues"""
-    url = "/issues"
+    url = "https://api.github.com/issues"
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
 
