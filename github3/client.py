@@ -112,7 +112,11 @@ class User(object):
     resp = self.client.get(url, **kw)
     return SimpleList.FromResponse(self.client, resp)
 
-
+  def user_issues(self, **kw):
+    """Returns a PaginatedResourceList of a user's issues"""
+    url = "/issues"
+    resp = self.client.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
 
 class ResourceList(object):
   def __init__(self, client, url, datalist=None):
