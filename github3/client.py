@@ -1,5 +1,6 @@
 import json
 import UserDict
+from urllib2 import HTTPError
 
 from github3 import request
 
