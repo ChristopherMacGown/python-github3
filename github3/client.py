@@ -1,5 +1,6 @@
 import json
 import UserDict
+from urllib2 import HTTPError
 
 from github3 import request
 
@@ -112,7 +113,11 @@ class User(object):
     resp = self.client.get(url, **kw)
     return SimpleList.FromResponse(self.client, resp)
 
-
+  def user_issues(self, **kw):
+    """Returns a PaginatedResourceList of the authenticated user's issues"""
+    url = "https://api.github.com/issues"
+    resp = self.client.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
 
 class ResourceList(object):
   def __init__(self, client, url, datalist=None):
