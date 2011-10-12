@@ -133,9 +133,7 @@ class ResourceList(object):
                response.geturl(),
                [_resource_factory(client, x) for x in j])
       else:
-        return cls(client,
-               response.geturl(),
-               _resource_factory(client, j))
+        return j
 
 
   def append(self, **kw):
@@ -164,10 +162,14 @@ class PaginatedResourceList(ResourceList):
   def FromResponse(cls, client, response):
     url = response.geturl()
     next_page = response.info().get('X-Next')
-    return cls(client,
-               response.geturl(),
-               [_resource_factory(client, x) for x in json.load(response)],
-               next_page=next_page)
+    j = json.load(response)
+    if type(j) is list:
+      return cls(client,
+                 response.geturl(),
+                 [_resource_factory(client, x) for x in j],
+                 next_page=next_page)
+    else:
+      return j
 
   def __iter__(self):
     i = 0
