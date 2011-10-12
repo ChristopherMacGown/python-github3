@@ -30,6 +30,9 @@ class Request(object):
     return self._opener.open(req)
 
   def get(self, url, **kw):
+    sha = kw.pop("sha", "")
+    if sha:
+      url += "/%s" % sha
     url = '%s?%s' % (url, urllib.urlencode(kw))
     req = HTTPMethodRequest('GET', url)
     req = self._authenticate(req)
