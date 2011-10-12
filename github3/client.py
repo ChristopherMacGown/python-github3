@@ -133,9 +133,7 @@ class ResourceList(object):
                response.geturl(),
                [_resource_factory(client, x) for x in j])
       else:
-        return cls(client,
-               response.geturl(),
-               _resource_factory(client, j))
+        return j
 
 
   def append(self, **kw):
