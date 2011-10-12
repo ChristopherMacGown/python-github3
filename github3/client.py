@@ -93,6 +93,20 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return ResourceList.FromResponse(self.client, resp)
 
+  def trees(self, sha, **kw):
+    """Return a ResourceList of Trees for a repo"""
+    url = '%s/%s/%s/git/trees/%s' % (
+            self.BASE_URL, self.user, self.repo, sha)
+    resp = self.client.get(url, **kw)
+    return ResourceList.FromResponse(self.client, resp)
+
+  def refs(self, ref, **kw):
+    """Return a ResourceList of Refs for a repo"""
+    url = '%s/%s/%s/git/refs/%s' % (
+            self.BASE_URL, self.user, self.repo, ref)
+    resp = self.client.get(url, **kw)
+    return ResourceList.FromResponse(self.client, resp)
+
 
 class User(object):
   BASE_URL = "https://api.github.com/user"
