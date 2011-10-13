@@ -107,7 +107,6 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return ResourceList.FromResponse(self.client, resp)
 
-
 class User(object):
   BASE_URL = "https://api.github.com/user"
 
@@ -223,3 +222,15 @@ class Resource(dict):
 
   def delete(self):
     self.client.delete(self.url)
+
+  @classmethod
+  def create(cls, repo, resource_type, data):
+    """Create a resource.
+    
+    `resource_type` takes values such as 'issues', or 'git/commits'
+    """
+    url = '%s/%s/%s/%s' % (Repo.BASE_URL, repo.user, repo.repo, resource_type)
+    resp = client.post(url, **kw)
+    print resp
+    
+    
