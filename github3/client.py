@@ -1,6 +1,7 @@
 import json
 import UserDict
 from urllib2 import HTTPError
+import base64
 
 from github3 import request
 
@@ -112,7 +113,13 @@ class Repo(object):
     url = '%s/%s/%s/git/blobs/%s' % (
             self.BASE_URL, self.user, self.repo, sha)
     resp = self.client.get(url, **kw)
-    return ResourceList.FromResponse(self.client, resp)
+    
+    blob = ResourceList.FromResponse(self.client, resp)
+    
+    if blob["encoding"] == "base64":
+        blob["content"] = base64.b64decode(blob["content"])
+    
+    return blob
 
 class User(object):
   BASE_URL = "https://api.github.com/user"
