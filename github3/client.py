@@ -230,7 +230,8 @@ class Resource(dict):
     `resource_type` takes values such as 'issues', or 'git/commits'
     """
     url = '%s/%s/%s/%s' % (Repo.BASE_URL, repo.user, repo.repo, resource_type)
-    resp = client.post(url, **kw)
-    print resp
+    resp = repo.client.post(url, **data)
+    
+    return json.load(resp)
     
     
