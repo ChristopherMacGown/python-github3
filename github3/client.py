@@ -107,6 +107,13 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return ResourceList.FromResponse(self.client, resp)
 
+  def blobs(self, sha, **kw):
+    """Return a ResourceList for a single Blob"""
+    url = '%s/%s/%s/git/blobs/%s' % (
+            self.BASE_URL, self.user, self.repo, sha)
+    resp = self.client.get(url, **kw)
+    return ResourceList.FromResponse(self.client, resp)
+
 class User(object):
   BASE_URL = "https://api.github.com/user"
 
