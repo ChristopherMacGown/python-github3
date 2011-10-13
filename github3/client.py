@@ -198,12 +198,6 @@ class Resource(dict):
     self.url = url
     dict.__init__(self, **data)
 
-  def __setitem__(self, key, val):
-    raise Exception('cannot modify dict')
-
-  def __delitem__(self, key):
-    raise Exception('cannot modify dict')
-
   def update(self, kw):
     rv = self.client.patch(self.url, **kw)
     dict.update(self, kw)
