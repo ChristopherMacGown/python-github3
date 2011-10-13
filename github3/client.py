@@ -101,10 +101,12 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return ResourceList.FromResponse(self.client, resp)
 
-  def refs(self, ref, **kw):
+  def refs(self, ref=None, **kw):
     """Return a ResourceList of Refs for a repo"""
-    url = '%s/%s/%s/git/refs/%s' % (
-            self.BASE_URL, self.user, self.repo, ref)
+    url = '%s/%s/%s/git/refs' % (
+            self.BASE_URL, self.user, self.repo)
+    if ref:
+        url += "/%s" % ref
     resp = self.client.get(url, **kw)
     return ResourceList.FromResponse(self.client, resp)
 
