@@ -133,7 +133,7 @@ class ResourceList(object):
                response.geturl(),
                [_resource_factory(client, x) for x in j])
       else:
-        return j
+        return Resource(client, response.geturl(), j)
 
 
   def append(self, **kw):
@@ -169,7 +169,7 @@ class PaginatedResourceList(ResourceList):
                  [_resource_factory(client, x) for x in j],
                  next_page=next_page)
     else:
-      return j
+      return Resource(client, response.geturl(), j)
 
   def __iter__(self):
     i = 0
