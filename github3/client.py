@@ -162,9 +162,7 @@ class ResourceList(object):
                response.geturl(),
                [_resource_factory(client, x) for x in j])
       else:
-        return cls(client,
-               response.geturl(),
-               _resource_factory(client, j))
+        return Resource(client, response.geturl(), j)
 
 
   def append(self, **kw):
@@ -193,10 +191,14 @@ class PaginatedResourceList(ResourceList):
   def FromResponse(cls, client, response):
     url = response.geturl()
     next_page = response.info().get('X-Next')
-    return cls(client,
-               response.geturl(),
-               [_resource_factory(client, x) for x in json.load(response)],
-               next_page=next_page)
+    j = json.load(response)
+    if type(j) is list:
+      return cls(client,
+                 response.geturl(),
+                 [_resource_factory(client, x) for x in j],
+                 next_page=next_page)
+    else:
+      return Resource(client, response.geturl(), j)
 
   def __iter__(self):
     i = 0
@@ -224,12 +226,6 @@ class Resource(dict):
     self.client = client
     self.url = url
     dict.__init__(self, **data)
-
-  def __setitem__(self, key, val):
-    raise Exception('cannot modify dict')
-
-  def __delitem__(self, key):
-    raise Exception('cannot modify dict')
 
   def update(self, kw):
     rv = self.client.patch(self.url, **kw)
