@@ -1,6 +1,7 @@
 import json
 import UserDict
 from urllib2 import HTTPError
+import base64
 
 from github3 import request
 
@@ -93,6 +94,34 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return ResourceList.FromResponse(self.client, resp)
 
+  def trees(self, sha, **kw):
+    """Return a ResourceList of Trees for a repo"""
+    url = '%s/%s/%s/git/trees/%s' % (
+            self.BASE_URL, self.user, self.repo, sha)
+    resp = self.client.get(url, **kw)
+    return ResourceList.FromResponse(self.client, resp)
+
+  def refs(self, ref=None, **kw):
+    """Return a ResourceList of Refs for a repo"""
+    url = '%s/%s/%s/git/refs' % (
+            self.BASE_URL, self.user, self.repo)
+    if ref:
+        url += "/%s" % ref
+    resp = self.client.get(url, **kw)
+    return ResourceList.FromResponse(self.client, resp)
+
+  def blobs(self, sha, **kw):
+    """Return a ResourceList for a single Blob"""
+    url = '%s/%s/%s/git/blobs/%s' % (
+            self.BASE_URL, self.user, self.repo, sha)
+    resp = self.client.get(url, **kw)
+    
+    blob = ResourceList.FromResponse(self.client, resp)
+    
+    if blob["encoding"] == "base64":
+        blob["content"] = base64.b64decode(blob["content"])
+    
+    return blob
 
 class User(object):
   BASE_URL = "https://api.github.com/user"
@@ -209,3 +238,16 @@ class Resource(dict):
 
   def delete(self):
     self.client.delete(self.url)
+
+  @classmethod
+  def create(cls, repo, resource_type, data):
+    """Create a resource.
+    
+    `resource_type` takes values such as 'issues', or 'git/commits'
+    """
+    url = '%s/%s/%s/%s' % (Repo.BASE_URL, repo.user, repo.repo, resource_type)
+    resp = repo.client.post(url, **data)
+    
+    return json.load(resp)
+    
+    
