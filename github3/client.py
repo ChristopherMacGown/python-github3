@@ -23,6 +23,13 @@ class Client(request.Request):
   def repo(self, user, repo_):
     return Repo(client=self, user=user, repo=repo_)
 
+  def list_orgs(self, **kw):
+    """Return user's organizations"""
+    url = "%s/orgs" % self.BASE_URL
+    resp = self.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self, resp)
+
+
 class Repo(object):
   BASE_URL = "https://api.github.com/repos"
 
@@ -115,13 +122,14 @@ class Repo(object):
     url = '%s/%s/%s/git/blobs/%s' % (
             self.BASE_URL, self.user, self.repo, sha)
     resp = self.client.get(url, **kw)
-    
+
     blob = ResourceList.FromResponse(self.client, resp)
-    
+
     if blob["encoding"] == "base64":
         blob["content"] = base64.b64decode(blob["content"])
-    
+
     return blob
+
 
 class User(object):
   BASE_URL = "https://api.github.com/user"
@@ -147,6 +155,21 @@ class User(object):
     url = "https://api.github.com/issues"
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
+
+
+class Organization(object):
+  BASE_URL = "https://api.github.com/orgs"
+
+  def __init__(self, client, org):
+    self.client = client
+    self.org = org
+
+  def repos(self, **kw):
+    """List repositories in a given organization"""
+    url = "%s/%s/repos" % (self.BASE_URL, self.org)
+    resp = self.client.get(url, **kw)
+    return SimpleList.FromResponse(self.client, resp)
+
 
 class ResourceList(object):
   def __init__(self, client, url, datalist=None):
