@@ -1,9 +1,9 @@
 import json
-import UserDict
 from urllib2 import HTTPError
 import base64
 
 from github3 import request
+from github3.link_parser import parse_link_value
 
 
 def _resource_factory(client, data):
@@ -187,10 +187,20 @@ class PaginatedResourceList(ResourceList):
     super(PaginatedResourceList, self).__init__(client, url, datalist)
     self.next_page = next_page
 
+  @staticmethod
+  def get_next_link(response):
+    """Extract the link to the next page from the 'Link' header.
+    """
+    next_links = [link[0] for link
+                  in parse_link_value(response.info().get('Link')).items()
+                  if link[1]['rel'] == 'next']
+    if next_links:
+        return next_links[0]
+    return None
+
   @classmethod
   def FromResponse(cls, client, response):
-    url = response.geturl()
-    next_page = response.info().get('X-Next')
+    next_page = PaginatedResourceList.get_next_link(response)
     j = json.load(response)
     if type(j) is list:
       return cls(client,
@@ -207,10 +217,14 @@ class PaginatedResourceList(ResourceList):
       try:
         yield self.datalist[i]
       except IndexError:
-        if json.load(self.client.get(self.url.split("?")[0], page=page)):
-          response = self.client.get(self.url.split("?")[0], page=page)
+        if not self.next_page:
+          raise StopIteration
+        response = self.client.get(self.next_page)
+        resources = json.load(response)
+        if resources:
+          self.next_page = PaginatedResourceList.get_next_link(response)
           self.datalist.extend(
-              [_resource_factory(self.client, x) for x in json.load(response)])
+              [_resource_factory(self.client, x) for x in resources])
           page += 1
           yield self.datalist[i]
         else:
@@ -238,12 +252,10 @@ class Resource(dict):
   @classmethod
   def create(cls, repo, resource_type, data):
     """Create a resource.
-    
+
     `resource_type` takes values such as 'issues', or 'git/commits'
     """
     url = '%s/%s/%s/%s' % (Repo.BASE_URL, repo.user, repo.repo, resource_type)
     resp = repo.client.post(url, **data)
-    
+
     return json.load(resp)
-    
-    
