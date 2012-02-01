@@ -139,21 +139,25 @@ class Repo(object):
 
 
 class User(object):
-  BASE_URL = "https://api.github.com/user"
+  BASE_USER_URL = "https://api.github.com/user"
+  BASE_USERS_URL = "https://api.github.com/users"
 
   def __init__(self, client):
     self.client = client
 
-  def user_info(self, **kw):
+  def user_info(self, login=None, **kw):
     """Returns a ResourceList of a user's information"""
-    url = self.BASE_URL
+    if login is None:
+      url = self.BASE_USER_URL
+    else:
+      url = '%s/%s' % (self.BASE_USERS_URL, login)
     resp = self.client.get(url, **kw)
     return ResourceList.FromResponse(self.client, resp)
 
   def user_emails(self, **kw):
     """Returns a SimpleList of a user's email addresses. Email addresses don't
     return in a usual format, thus the need for a simple list."""
-    url = "%s/emails" %self.BASE_URL
+    url = "%s/emails" %self.BASE_USER_URL
     resp = self.client.get(url, **kw)
     return SimpleList.FromResponse(self.client, resp)
 
