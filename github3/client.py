@@ -130,6 +130,13 @@ class Repo(object):
 
     return blob
 
+  def collaborators(self, **kw):
+    """Return a ResourceList of Collaborators for a repo"""
+    url = '%s/%s/%s/collaborators' % (
+            self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **kw)
+    return ResourceList.FromResponse(self.client, resp)
+
 
 class User(object):
   BASE_URL = "https://api.github.com/user"
