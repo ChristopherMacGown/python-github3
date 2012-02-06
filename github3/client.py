@@ -69,6 +69,13 @@ class Repo(object):
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
 
+  def commit(self, sha, **kw):
+    """Return a single commit in a repo."""
+    url = '%s/%s/%s/commits/%s' % (
+            self.BASE_URL, self.user, self.repo, sha)
+    resp = self.client.get(url, **kw)
+    return Resource(self.client, url, json.loads(resp.read()))
+
   def commits(self, **kw):
     """Return a PaginatedResourceList of commits for a repo"""
     url = '%s/%s/%s/commits' % (
