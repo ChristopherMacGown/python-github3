@@ -1,9 +1,9 @@
 import json
-import UserDict
 from urllib2 import HTTPError
 import base64
 
 from github3 import request
+from github3.link_parser import parse_link_value
 
 
 def _resource_factory(client, data):
@@ -22,6 +22,13 @@ class Client(request.Request):
 
   def repo(self, user, repo_):
     return Repo(client=self, user=user, repo=repo_)
+
+  def list_orgs(self, **kw):
+    """Return user's organizations"""
+    url = "%s/orgs" % self.BASE_URL
+    resp = self.get(url, **kw)
+    return PaginatedResourceList.FromResponse(self, resp)
+
 
 class Repo(object):
   BASE_URL = "https://api.github.com/repos"
@@ -61,6 +68,13 @@ class Repo(object):
         self.BASE_URL, self.user, self.repo, issue)
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
+
+  def commit(self, sha, **kw):
+    """Return a single commit in a repo."""
+    url = '%s/%s/%s/commits/%s' % (
+            self.BASE_URL, self.user, self.repo, sha)
+    resp = self.client.get(url, **kw)
+    return Resource(self.client, url, json.loads(resp.read()))
 
   def commits(self, **kw):
     """Return a PaginatedResourceList of commits for a repo"""
@@ -115,30 +129,42 @@ class Repo(object):
     url = '%s/%s/%s/git/blobs/%s' % (
             self.BASE_URL, self.user, self.repo, sha)
     resp = self.client.get(url, **kw)
-    
+
     blob = ResourceList.FromResponse(self.client, resp)
-    
+
     if blob["encoding"] == "base64":
         blob["content"] = base64.b64decode(blob["content"])
-    
+
     return blob
 
+  def collaborators(self, **kw):
+    """Return a ResourceList of Collaborators for a repo"""
+    url = '%s/%s/%s/collaborators' % (
+            self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **kw)
+    return ResourceList.FromResponse(self.client, resp)
+
+
 class User(object):
-  BASE_URL = "https://api.github.com/user"
+  BASE_USER_URL = "https://api.github.com/user"
+  BASE_USERS_URL = "https://api.github.com/users"
 
   def __init__(self, client):
     self.client = client
 
-  def user_info(self, **kw):
+  def user_info(self, login=None, **kw):
     """Returns a ResourceList of a user's information"""
-    url = self.BASE_URL
+    if login is None:
+      url = self.BASE_USER_URL
+    else:
+      url = '%s/%s' % (self.BASE_USERS_URL, login)
     resp = self.client.get(url, **kw)
     return ResourceList.FromResponse(self.client, resp)
 
   def user_emails(self, **kw):
     """Returns a SimpleList of a user's email addresses. Email addresses don't
     return in a usual format, thus the need for a simple list."""
-    url = "%s/emails" %self.BASE_URL
+    url = "%s/emails" %self.BASE_USER_URL
     resp = self.client.get(url, **kw)
     return SimpleList.FromResponse(self.client, resp)
 
@@ -147,6 +173,21 @@ class User(object):
     url = "https://api.github.com/issues"
     resp = self.client.get(url, **kw)
     return PaginatedResourceList.FromResponse(self.client, resp)
+
+
+class Organization(object):
+  BASE_URL = "https://api.github.com/orgs"
+
+  def __init__(self, client, org):
+    self.client = client
+    self.org = org
+
+  def repos(self, **kw):
+    """List repositories in a given organization"""
+    url = "%s/%s/repos" % (self.BASE_URL, self.org)
+    resp = self.client.get(url, **kw)
+    return SimpleList.FromResponse(self.client, resp)
+
 
 class ResourceList(object):
   def __init__(self, client, url, datalist=None):
@@ -187,10 +228,20 @@ class PaginatedResourceList(ResourceList):
     super(PaginatedResourceList, self).__init__(client, url, datalist)
     self.next_page = next_page
 
+  @staticmethod
+  def get_next_link(response):
+    """Extract the link to the next page from the 'Link' header.
+    """
+    next_links = [link[0] for link
+                  in parse_link_value(response.info().get('Link')).items()
+                  if link[1]['rel'] == 'next']
+    if next_links:
+        return next_links[0]
+    return None
+
   @classmethod
   def FromResponse(cls, client, response):
-    url = response.geturl()
-    next_page = response.info().get('X-Next')
+    next_page = PaginatedResourceList.get_next_link(response)
     j = json.load(response)
     if type(j) is list:
       return cls(client,
@@ -207,10 +258,14 @@ class PaginatedResourceList(ResourceList):
       try:
         yield self.datalist[i]
       except IndexError:
-        if json.load(self.client.get(self.url.split("?")[0], page=page)):
-          response = self.client.get(self.url.split("?")[0], page=page)
+        if not self.next_page:
+          raise StopIteration
+        response = self.client.get(self.next_page)
+        resources = json.load(response)
+        if resources:
+          self.next_page = PaginatedResourceList.get_next_link(response)
           self.datalist.extend(
-              [_resource_factory(self.client, x) for x in json.load(response)])
+              [_resource_factory(self.client, x) for x in resources])
           page += 1
           yield self.datalist[i]
         else:
@@ -238,12 +293,10 @@ class Resource(dict):
   @classmethod
   def create(cls, repo, resource_type, data):
     """Create a resource.
-    
+
     `resource_type` takes values such as 'issues', or 'git/commits'
     """
     url = '%s/%s/%s/%s' % (Repo.BASE_URL, repo.user, repo.repo, resource_type)
     resp = repo.client.post(url, **data)
-    
+
     return json.load(resp)
-    
-    
