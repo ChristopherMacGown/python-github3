@@ -50,6 +50,12 @@ class Repo(object):
     resp = self.client.get(url)
     return Resource(self.client, url, json.loads(resp.read()))
 
+  def keys(self, **kw):
+    """Return a PaginatedResourceList of repo deploy keys."""
+    url = '%s/%s/%s/keys' % (self.BASE_URL, self.user, self.repo)
+    resp = self.client.get(url, **sw)
+    return PaginatedResourceList.FromResponse(self.client, resp)
+
   def milestones(self, **kw):
     """Return a PaginatedResourceList of milestones."""
     url = '%s/%s/%s/milestones' % (self.BASE_URL, self.user, self.repo)
